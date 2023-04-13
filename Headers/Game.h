@@ -20,17 +20,18 @@ private:
     Deck deck;
     vector <Player> players;
     bool isGameOver;
-    
-
+    void bettingRound(int minimumBet);
+    void printCommunityCards() const;
     void checkForWinner();
     void dealHoleCards();
     void bettingPreFlop();
     void dealFlop();
-    void bettingPostFlop();
-    void bettingPostTurn(); // --\/\/\/
-    void bettingPostRiver(); // might be the same func isn't it ? 
+    void bettingPostFlopOrTurnOrRiver();
     void dealTurnOrRiver();
     void determineWinner();
+    void determineBestHand();
+    void determineWorstHand();
+    void StartingRound();
 
 };
 #endif

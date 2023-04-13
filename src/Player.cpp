@@ -2,7 +2,6 @@
 #include "../Headers/Hand.h"
 #include <iostream>
 
-
 using namespace std;
 Player::Player(string n, int c): name(n), chips(c), hand(Hand()){
     this->currentBet = 0;
@@ -35,11 +34,8 @@ int Player::getCurrentBet() const{
 void Player::ResetCurrentBet(){
     currentBet = 0;
 }
-void Player::clearHand(){
-    hand.clear();
-}
-vector<Card> Player::getHand() const{
-    return hand.getCards();
+Hand Player::getHand() const{
+    return hand;
 }
 string Player::getName() const {
     return name;
@@ -62,8 +58,8 @@ bool Player::isActive() const {
 void Player::fold() {
     isactive = false;
 }
-
-//takes a vector of communityCards and uses the bestHand static method of the Hand class to calculate the best hand from the player's hole cards and the community cards, and stores the result in the activeHand variable.
-void Player::calculateActiveHand(const vector<Card>& communityCards) {
-    activeHand = Hand::bestHand(hand, communityCards);
+vector<Card> Player::getBestHand(){
+    //this function returns the best 5 cards hand that a player can make. 2 cards from his hand and 3 from the community cards.
+    const vector <Card> player_cards= hand.getCards();
+    const vector <Card> community_cards= hand.getCommunityCards();
 }

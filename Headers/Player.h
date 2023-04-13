@@ -17,6 +17,7 @@ private:
     
 
 public:
+
     void ResetCurrentBet();
     int getCurrentBet() const;
     void printHoleCards() const;
@@ -24,7 +25,7 @@ public:
     void receiveHoleCard(Card card);
     void receiveCommunityCard(Card card);
     void clearHand();
-    vector<Card> getHand() const;
+    Hand getHand() const;
     int getChips() const;
     void addChips(int amount);
     void subtractChips(int amount);
@@ -32,7 +33,7 @@ public:
     bool isActive() const;
     void fold();
     void bet(int amount);
-
+    vector<Card> getBestHand();
     void calculateActiveHand(const vector<Card>& communityCards);
     
 

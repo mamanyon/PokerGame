@@ -19,6 +19,9 @@ void Hand::addCommunityCard(Card card) {
 vector<Card> Hand::getCards() const {
     return player_cards;
 }
+vector<Card> Hand::getCommunityCards() const {
+    return community_card;
+}
 
 bool Hand::operator<(const Hand& other) const {
     return Comparator::compareHands(*this, other) < 0;

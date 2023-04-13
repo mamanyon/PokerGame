@@ -13,15 +13,15 @@ Game::Game():num_players(0), currentPlayerIndex(0),deck(Deck()), pot(0), players
     cout << "How many players are there?" << endl;
 
     int numPlayers,startingMoney;
-    cin >> numPlayers;
+    std::cin >> numPlayers;
     this->num_players = numPlayers;
 
     cout << "How much money does each player start with?" << endl;
-    cin >> startingMoney;
+    std::cin >> startingMoney;
     for (int i = 0; i < numPlayers; i++) {
         cout << "What is the name of player " << i + 1 << "?" << endl;
         string name;
-        cin >> name;
+        std::cin >> name;
         Player p(name, startingMoney);   
         players.push_back(p);
     }
@@ -34,26 +34,56 @@ int Game::getNumPlayers() const{
 void Game::run(int startingPlayerIndex) {
      this->currentPlayerIndex=startingPlayerIndex;
     //the deck is already shuffled when it is initialized.
-
+    StartingRound();
     dealHoleCards();
     //is good
     bettingPreFlop();//is good
     if(isGameOver)return;
     dealFlop();//is good
-    bettingPostFlop();
-    if(isGameOver)return;
-    dealTurnOrRiver();//working on it
-    bettingPostTurn();
+    bettingPostFlopOrTurnOrRiver();
     if(isGameOver)return;
     dealTurnOrRiver();
-    bettingPostRiver();
+    bettingPostFlopOrTurnOrRiver();
+    if(isGameOver)return;
+    dealTurnOrRiver();
+    bettingPostFlopOrTurnOrRiver();
     if(isGameOver)return;
     determineWinner();//hardest part
 }
 
+void Game::printCommunityCards() const{
+    if(communityCards.size() > 0){
+    cout << "The community cards are: "<<endl;
+        for(Card c: communityCards){
+            cout<<c.toString()<<" ";
+        }
+        cout<<'\n';
+    }
+    else{
+        cout<<"No community cards have been dealt yet."<<endl;
+    }
+}
+
+void Game::StartingRound(){
+    // First player pays the pot minimum bet
+    Player& firstPlayer = players[currentPlayerIndex];
+    cout << "Player " << firstPlayer.getName() << ", you need to pay the pot minimum bet of " << minimumBet << "." << endl;
+    firstPlayer.bet(smallBlind);
+    pot += smallBlind;
+
+    // Second player pays the big blind
+    int playerIndex = (currentPlayerIndex + 1) % num_players;
+    Player& secondPlayer = players[playerIndex];
+    cout << "Player " << secondPlayer.getName() << ", you need to pay the big blind of " << bigBlind << "." << endl;
+    secondPlayer.bet(bigBlind);
+    pot += bigBlind;  
+}
+
 void Game::dealHoleCards() {//deal 4 cards to each player at the beginning of the game
-    for(int i = 0; i < 4; i++){
-        for (Player& player : players) {    
+//starting from the player that pays the small blind- left to dealer = playerIndex
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < num_players; j++) {
+            Player& player = players[(currentPlayerIndex + j) % num_players];
             player.receiveHoleCard(deck.dealCard());
         }
     }
@@ -109,149 +139,115 @@ void Game::checkForWinner(){
 
 void Game::bettingPreFlop(){
     int minimumBet = bigBlind; // the minimum bet is equal to the big blind
-    int currentBet = 0; // keep track of the current bet for this round
+    bettingRound(minimumBet);
+}
 
-    // Prompt each player to make a bet or fold
-    for (int i = 0; i < num_players; i++) {
-        Player& currentPlayer = players[(this->currentPlayerIndex + i) % num_players];
+void Game::bettingPostFlopOrTurnOrRiver(){
+    int minimumBet = 0; // minimum bet is now zero, because no bets have been made yet
+    bettingRound(minimumBet);
+}
 
-        // Skip the player if they've already folded
-        if (!currentPlayer.isActive()) {
-            continue;
+
+void Game::bettingRound(int minimumBet) {
+    int playerIndex = currentPlayerIndex; // starting player for the round
+    int playersToAct = 0; // number of active players who have not yet checked or folded
+    for (Player& player : players) {//count the number of active players
+        if (player.isActive()) {
+            playersToAct++;
         }
-
-        // Prompt the player to make a decision
-        cout << "Player " << currentPlayer.getName() << ", it's your turn to act." << endl;
-        cout << "Your hand: "<<endl;
-        currentPlayer.printHoleCards();
-        cout << "The minimum bet is " << minimumBet << ". You have " << currentPlayer.getChips() << " chips." << endl;
-        cout << "Do you want to (1) bet, (2) fold, or (3) check/call?" << endl;
-
-        int choice;
-        cin >> choice;
-
-        switch (choice) {
-            case 1: // Bet
-                cout << "How much do you want to bet?" << endl;
-                int betAmount;
-                cin >> betAmount;
-
-                // Validate that the bet amount is at least the minimum bet
-                if (betAmount < minimumBet) {
-                    cout << "Your bet must be at least " << minimumBet << " chips." << endl;
-                    i--; // Prompt the same player again
-                    continue;
-                }
-
-                // Place the bet and update the current bet and minimum bet
-                currentPlayer.bet(betAmount);
-                currentBet = betAmount;
-                minimumBet = currentBet;
-                pot += currentBet;
+    }
+    // Prompt each player to make a bet or fold
+    bool roundFinished = false;
+    int i=0;
+    while (!roundFinished) {  
+            if(playersToAct==0){ //if all players have checked, called or folded
+                roundFinished=true;
                 break;
+            }
+            Player& currentPlayer = players[(playerIndex + i+2) % num_players];
 
-            case 2: // Fold
-                cout << "You fold." << endl;
-                currentPlayer.fold();
-                checkForWinner();
-                if(isGameOver)
-                    return;
-                break;
-
-            case 3: // Check/Call
-                int callAmount = minimumBet - currentPlayer.getCurrentBet();
-                if (callAmount > 0) {
-                    cout << "You call " << callAmount << "." << endl;
-                    currentPlayer.bet(callAmount);
-                    pot += callAmount;
-                } else {
-                    cout << "You check." << endl;
-                }
-                break;
-
-            default: // Invalid choice
-                cout << "Invalid choice. Please choose 1, 2, or 3." << endl;
-                i--; // Prompt the same player again
+            // Skip the player if they've already folded
+            if (!currentPlayer.isActive()) {
                 continue;
-        }
-    }
-    for (Player& player : players) {
-        player.ResetCurrentBet();
-    }
+            }
+            // Prompt the player to make a decision
+            cout << "Player " << currentPlayer.getName() << ", it's your turn to act." << endl;
+            cout << "Your hand: "<<endl;
+            currentPlayer.printHoleCards();
+            cout << "The community cards are: " << endl;
+            printCommunityCards();
+            cout << "The minimum bet is " << minimumBet << ". You have " << currentPlayer.getChips() << " chips." << endl;
+            cout <<"Your current bet in this round is "<<currentPlayer.getCurrentBet()<<endl;
+            cout << "Do you want to (1) raise, (2) fold, or (3) check/call?" << endl;
 
-    
-}
+            int choice;
+            std::cin >> choice;
 
-// need to implement that now -\/
-void Game::bettingPostFlop(){
-    int minimumBet = bigBlind; // the minimum bet is equal to the big blind
-    int currentBet = 0; // keep track of the current bet for this round
+            switch (choice) {
+                case 1: // raise
+                    cout << "How much do you want to raise?" << endl;
+                    int raiseAmount;
+                    std::cin >> raiseAmount;
 
-    // Prompt each player to make a bet or fold
-    for (int i = 0; i < num_players; i++) {
-        Player& currentPlayer = players[(this->currentPlayerIndex + i) % num_players];
+                    // Validate that the raise amount is at least the minimum raise
+                    int minimumRaise = minimumBet * 2 - currentPlayer.getCurrentBet(); // In poker, the minimum raise is typically double the previous bet or raise
+                    if (raiseAmount < minimumRaise) {
+                        cout << "Your raise must be at least " << minimumRaise << " chips." << endl;
+                        i--; // Prompt the same player again
+                        continue;
+                    }
 
-        // Skip the player if they've already folded
-        if (!currentPlayer.isActive()) {
-            continue;
-        }
+                    // Place the raise and update the current bet and minimum bet
+                    currentPlayer.bet(raiseAmount);
+                    minimumBet = raiseAmount;
+                    pot += raiseAmount;
+                    playersToAct--; // The player who raised does not need to act again for now..
+                    break;
 
-        // Prompt the player to make a decision
-        cout << "Player " << currentPlayer.getName() << ", it's your turn to act." << endl;
-        cout << "Your hand: "<<endl;
-        currentPlayer.printHoleCards();
-        cout << "The community cards are: "<<endl;
-        for(Card c:communityCards){
-            cout<<c.toString()<<endl;
-        }
-        cout << "The minimum bet is " << minimumBet << ". You have " << currentPlayer.getChips() << " chips." << endl;
-        cout << "Do you want to (1) bet, (2) fold, (3) check/call, or (4) raise?" << endl;
+                case 2: // Fold
+                    cout << "You fold." << endl;
+                    currentPlayer.fold();
+                    playersToAct--;
+                    checkForWinner();
+                    if(isGameOver)
+                        return;
+                    break;
 
-        int choice;
-        cin >> choice;
+                case 3: // Check/Call
+                    int callAmount = minimumBet - currentPlayer.getCurrentBet();
+                    if (callAmount > 0) {
+                        cout << "You call " << callAmount << "." << endl;
+                        currentPlayer.bet(callAmount);
+                        pot += callAmount;
+                    } else {
+                        cout << "You check." << endl;
+                    }
+                    playersToAct--;
+                    break;
 
-        switch (choice) {
-            case 1: // Bet
-                cout << "How much do you want to bet?" << endl;
-                int betAmount;
-                cin >> betAmount;
-
-                // Validate that the bet amount is at least the minimum bet
-                if (betAmount < minimumBet) {
-                    cout << "Your bet must be at least " << minimumBet << " chips." << endl;
+                default: // Invalid choice
+                    cout << "Invalid choice. Please choose 1, 2, or 3." << endl;
                     i--; // Prompt the same player again
                     continue;
-                }
-
-                // Place the bet and update the current bet and minimum bet
-                currentPlayer.bet(betAmount);
-                currentBet = betAmount;
-                minimumBet = currentBet;
-                pot += currentBet;
-                break;
-
-            case 2: // Fold
-                cout << "You fold." << endl;
-                currentPlayer.fold();
-                checkForWinner();
-                if(isGameOver)
-                    return;
-                break;
-
-            case 3: // Check/Call
-                int callAmount = minimumBet - currentPlayer.getCurrentBet();
-                if (callAmount > 0) {
-                    cout << "You call " << callAmount << "." << endl;
-                    currentPlayer.bet(callAmount);
-                }
-
+            }
+            i++;
         }
-    }
 }
+
+
 
 void Game::determineWinner() {
+    //Determine the best hand for each player that is still active
+    //also determine the worst hand for each player that is still active
+    //i want to compare between every 2 players that are still active
+    //and determine who has the best hand
+    //after that - determine who has the worst hand
+    //the player with the best hand wins half of the pot
+    //the player with the worst hand wins the other half of the pot
     
 }
+
+
 
 //might gonna use 
 

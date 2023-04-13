@@ -9,6 +9,7 @@ public:
     Hand();
     int getScore() const;
     std::vector<Card> getCards() const;
+    vector<Card> getCommunityCards() const;
     static Hand bestHand(const std::vector<Card>& holeCards, const std::vector<Card>& community_ards);
     static Hand worstHand(const std::vector<Card>& holeCards, const std::vector<Card>& community_cards);
     void addPlayerCard(Card card);
