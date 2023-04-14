@@ -4,11 +4,13 @@
 #include <iostream>
 #include <string>
 #include "..\Headers\Game.h" 
+
 using namespace std;
 
 Game::Game():num_players(0), currentPlayerIndex(0),deck(Deck()), pot(0), players(vector<Player>()), communityCards(vector<Card>())
 {
     this->isGameOver = false;
+    this->isRoundOver = false;
     cout << "Welcome to the game of Omaha Hi/Lo!" << endl;
     cout << "How many players are there?" << endl;
 
@@ -31,24 +33,25 @@ int Game::getNumPlayers() const{
     return num_players;
 }
 
-void Game::run(int startingPlayerIndex) {
-     this->currentPlayerIndex=startingPlayerIndex;
-    //the deck is already shuffled when it is initialized.
-    StartingRound();
-    dealHoleCards();
-    //is good
-    bettingPreFlop();//is good
-    if(isGameOver)return;
-    dealFlop();//is good
-    bettingPostFlopOrTurnOrRiver();
-    if(isGameOver)return;
-    dealTurnOrRiver();
-    bettingPostFlopOrTurnOrRiver();
-    if(isGameOver)return;
-    dealTurnOrRiver();
-    bettingPostFlopOrTurnOrRiver();
-    if(isGameOver)return;
-    determineWinner();//hardest part
+void Game::run() {
+    while(!isGameOver){
+        //the deck is already shuffled when it is initialized.
+        StartingRound();
+        dealHoleCards();
+        //is good
+        bettingPreFlop();//is good
+        if(isRoundOver)break;;
+        dealFlop();//is good
+        bettingPostFlopOrTurnOrRiver();
+        if(isRoundOver)break;
+        dealTurnOrRiver();
+        bettingPostFlopOrTurnOrRiver();
+        if(isRoundOver)break;
+        dealTurnOrRiver();
+        bettingPostFlopOrTurnOrRiver();
+        if(isRoundOver)break;
+        DetermineWinner();//hardest part
+     }
 }
 
 void Game::printCommunityCards() const{
@@ -126,13 +129,12 @@ void Game::checkForWinner(){
         }
     }
     if(numActivePlayers==1){
-        //if there is only one player left, he is the winner
+        //if there is only one player left, he is the winner of the round
         cout << "Player " << activePlayer->getName() << " wins the round!" << endl;
         activePlayer->addChips(pot);
         pot = 0;
-        isGameOver=true;
-        //resetGame();
-        
+        isRoundOver=true;
+        ResetRound();        
     }
 
 }
@@ -209,7 +211,7 @@ void Game::bettingRound(int minimumBet) {
                     currentPlayer.fold();
                     playersToAct--;
                     checkForWinner();
-                    if(isGameOver)
+                    if(isRoundOver)
                         return;
                     break;
 
@@ -236,51 +238,61 @@ void Game::bettingRound(int minimumBet) {
 
 
 
-void Game::determineWinner() {
+void Game::DetermineWinner() {
     //Determine the best hand for each player that is still active
     //also determine the worst hand for each player that is still active
-    //i want to compare between every 2 players that are still active
-    //and determine who has the best hand
-    //after that - determine who has the worst hand
-    //the player with the best hand wins half of the pot
-    //the player with the worst hand wins the other half of the pot
-    
+    vector<Combination> allHands ;
+    for(auto &player:players){
+        if(player.isActive()){
+            vector<Combination> playersHands = player.getCombinations();
+            //append allHands with the vector playersHands
+            allHands.insert(allHands.end(), playersHands.begin(), playersHands.end());
+        }
+    }
+    //sort allHands with compareHands
+    sort(allHands.begin(), allHands.end(), HandComparator::compareHands);
+    //the first element in allHands is the best hand
+    Combination bestHand = allHands[0];
+    //the last element in allHands is the worst hand
+    Combination worstHand = allHands[allHands.size()-1];
+    //if the best hand is the same as the worst hand, then there is only one winner
+
+
 }
 
 
 
 //might gonna use 
 
-void Game::resetGame() {
+void Game::ResetRound() {
     // Reset the deck
-    deck.reset();
+    // renew the deck
+    deck = Deck();
+    //shuffle the deck
+    deck.shuffle();
 
-    // Reset the pot and current bet
+    // Reset the pot
     pot = 0;
-    currentBet = 0;
 
-    // Reset the players
+    // Reset the players and their hands
     for (int i = 0; i < num_players; i++) {
         Player& player = players[i];
-        player.reset();
-        player.deactivate();
+        player.getHand().clearHand();
+        player.Activate();
+        if(player.getChips()<=0){//check if any player is out of chips
+            player.Deactivate();
+        }
     }
-
-    // Activate the required number of players
-    for (int i = 0; i < num_players; i++) {
-        players[i].activate();
-    }
-
-    // Randomly select the first player to act
-    currentPlayerIndex = rand() % num_players;
+    isGameOver=EndGame();
+    
+    //increment the dealer=curentPlayerIndex
+    currentPlayerIndex = (currentPlayerIndex + 1) % num_players;
 
     // Reset the community cards
     communityCards.clear();
 }
 
-
-
-void Game::endGame() {
+bool Game::EndGame() {
     // Check if there is only one active player left
     int activePlayers = 0;
     Player* winner = nullptr;
@@ -290,65 +302,16 @@ void Game::endGame() {
             winner = &players[i];
         }
     }
-
     if (activePlayers == 1) {
-        cout << "There's only one active player left. " << winner->getName() << " wins!" << endl;
-        winner->winChips(pot);
-        pot = 0;
-        return;
-    }
+        cout << "There's only one active player left. " << endl;
+        cout << winner->getName()<< "You have won the game!" << endl;
+        cout << "Congratulations!" << endl;
+        cout << "Thank you for playing!" << endl;
+        cout << "   " << endl;
+        cout << "Goodbye!" << endl;
 
-    // Evaluate each player's hand and find the winner(s)
-    vector<Player*> winners;
-    Hand bestHand;
-    for (int i = 0; i < num_players; i++) {
-        if (!players[i].isActive()) {
-            continue;
-        }
-
-        Hand currentHand = evaluateHand(players[i].getHoleCards(), communityCards);
-        int comparison = compareHands(currentHand, bestHand);
-        if (comparison > 0) {
-            winners.clear();
-            winners.push_back(&players[i]);
-            bestHand = currentHand;
-        } else if (comparison == 0) {
-            winners.push_back(&players[i]);
-        }
+        isGameOver=true;
+        return true;
     }
-
-    // Award the pot to the winner(s)
-    if (winners.size() == 1) {
-        Player* winner = winners[0];
-        cout << "The winner is " << winner->getName() << " with ";
-        printHandType(bestHand.getHandType());
-        cout << "!" << endl;
-        winner->winChips(pot);
-    } else {
-        cout << "There's a tie between ";
-        for (int i = 0; i < winners.size(); i++) {
-            cout << winners[i]->getName();
-            if (i < winners.size() - 2) {
-                cout << ", ";
-            } else if (i == winners.size() - 2) {
-                cout << " and ";
-            }
-        }
-        cout << " with ";
-        printHandType(bestHand.getHandType());
-        cout << "!" << endl;
-        int splitPot = pot / winners.size();
-        for (int i = 0; i < winners.size(); i++) {
-            winners[i]->winChips(splitPot);
-        }
-    }
-
-    // Reset the players' hands and bets
-    for (int i = 0; i < num_players; i++) {
-        players[i].resetHand();
-        players[i].resetCurrentBet();
-    }
-    communityCards.clear();
-    pot = 0;
-    currentPlayerIndex = dealerIndex;
+    return false;
 }

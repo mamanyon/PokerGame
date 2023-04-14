@@ -4,11 +4,13 @@
 #include <vector>
 #include "Player.h"
 #include "Deck.h"
+#include "HandComparator.h"
+#include <algorithm>
 using namespace std;
 class Game{
 public:
     Game();
-    void run(int index);
+    void run();
     vector <Card> communityCards;
     int getNumPlayers() const;
 private:    
@@ -20,6 +22,7 @@ private:
     Deck deck;
     vector <Player> players;
     bool isGameOver;
+    bool isRoundOver;
     void bettingRound(int minimumBet);
     void printCommunityCards() const;
     void checkForWinner();
@@ -28,10 +31,10 @@ private:
     void dealFlop();
     void bettingPostFlopOrTurnOrRiver();
     void dealTurnOrRiver();
-    void determineWinner();
-    void determineBestHand();
-    void determineWorstHand();
+    void DetermineWinner();
     void StartingRound();
+    void ResetRound();
+    bool EndGame();
 
 };
 #endif

@@ -58,8 +58,12 @@ bool Player::isActive() const {
 void Player::fold() {
     isactive = false;
 }
-vector<Card> Player::getBestHand(){
-    //this function returns the best 5 cards hand that a player can make. 2 cards from his hand and 3 from the community cards.
-    const vector <Card> player_cards= hand.getCards();
-    const vector <Card> community_cards= hand.getCommunityCards();
+vector<Combination> Player::getCombinations() const{
+    return hand.getCombinations(this->name);
+}
+void Player::Deactivate(){
+    isactive = false;
+}
+void Player::Activate(){
+    isactive = true;
 }

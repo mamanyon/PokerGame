@@ -19,10 +19,10 @@ enum Rank {
     Ace=14
 };
 enum Suit {
-    Clubs,
-    Diamonds,
+    Spades,
     Hearts,
-    Spades
+    Diamonds,
+    Clubs
 };
 
 // Define a card struct to represent a single playing card
@@ -30,7 +30,12 @@ struct Card {
     Rank rank;
     Suit suit;
     int getValue() const{
-        return rank;
+        return rank;}
+    void setValue(int value){
+        rank = (Rank)value;
+    }
+    int getSuit() const{
+        return suit;
     }
     std::string toString() const {
     const std::string rankStrings = "23456789TJQKA";

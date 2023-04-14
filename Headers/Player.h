@@ -17,7 +17,7 @@ private:
     
 
 public:
-
+    vector<Combination> getCombinations() const;
     void ResetCurrentBet();
     int getCurrentBet() const;
     void printHoleCards() const;
@@ -35,7 +35,8 @@ public:
     void bet(int amount);
     vector<Card> getBestHand();
     void calculateActiveHand(const vector<Card>& communityCards);
-    
+    void Deactivate();
+    void Activate();
 
 };
 

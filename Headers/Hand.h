@@ -2,7 +2,9 @@
 #define HAND_H
 #include <vector>
 #include "Deck.h"
+#include "Combination.h"
 using namespace std;
+
 class Hand {
 
 public:
@@ -14,21 +16,16 @@ public:
     static Hand worstHand(const std::vector<Card>& holeCards, const std::vector<Card>& community_cards);
     void addPlayerCard(Card card);
     void addCommunityCard(Card card);
-    
+    bool compareSameRankHand(const Hand& other) const;
+    vector<Combination> getCombinations(string name) const;
+    void clearHand();
 private:
     vector<Card> player_cards;
     vector<Card> community_card;
-
+    
     void sortByRank();
     void sortBySuit();
-    bool isFlush() const;
-    bool isStraight() const;
-    bool isStraightFlush() const;
-    bool isFourOfAKind() const;
-    bool isFullHouse() const;
-    bool isThreeOfAKind() const;
-    bool isTwoPair() const;
-    bool isPair() const;
+    
 };
 
 #endif
