@@ -1,6 +1,6 @@
 #ifndef DECK_H
 #define DECK_H
-
+#include <string>
 #include <vector>
 using namespace std;
 enum Rank {
@@ -29,6 +29,7 @@ enum Suit {
 struct Card {
     Rank rank;
     Suit suit;
+    Card(Rank r, Suit s) : rank(r), suit(s) {};
     int getValue() const{
         return rank;}
     void setValue(int value){

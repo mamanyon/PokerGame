@@ -1,4 +1,4 @@
-#include "Hand.h"
+#include "../Headers/Hand.h"
 #include <algorithm>
 #include <iostream>
 using namespace std;

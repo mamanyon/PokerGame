@@ -1,4 +1,5 @@
-#include "deck.h"
+#include "../Headers/Deck.h"
+#include <iostream>
 #include <algorithm> // for shuffle
 #include <stdexcept>
 #include <chrono>
@@ -11,8 +12,10 @@ Deck::Deck() {
     for (int suit = Clubs; suit <= Spades; suit++) {
         for (int rank = Two; rank <= Ace; rank++) {
             cards.push_back(Card{static_cast<Rank>(rank), static_cast<Suit>(suit)});
+            cout << "Deck size: " << cards.size() << endl;
         }
     }
+    
     topCardIndex = 0;
     shuffle();
 }
@@ -21,10 +24,11 @@ void Deck::shuffle() {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::shuffle(cards.begin(), cards.end(), std::default_random_engine(seed));
     topCardIndex = 0;
+    
 }
 
 Card Deck::dealCard() {
-    
+    cout << "3-Deck size: " << cards.size() << endl;
     // Check if there are any cards left in the deck
     if (topCardIndex >= cards.size()) {
         throw runtime_error("No cards left in the deck!");

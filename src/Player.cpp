@@ -43,9 +43,6 @@ string Player::getName() const {
 int Player::getChips() const {
     return chips;
 }
-int Player::getChips() const {
-    return chips;
-}
 void Player::addChips(int amount) {
     chips += amount;
 }

@@ -14,7 +14,6 @@ int main()
 	char con;
     Game game;
     int num_of_players= game.getNumPlayers();
-    cout<<"check"<<endl;
 	do{
 	
 	game.run();

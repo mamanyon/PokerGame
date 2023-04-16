@@ -7,7 +7,7 @@
 
 using namespace std;
 
-Game::Game():num_players(0), currentPlayerIndex(0),deck(Deck()), pot(0), players(vector<Player>()), communityCards(vector<Card>())
+Game::Game():num_players(0), currentPlayerIndex(0),deck(), pot(0), players(vector<Player>()), communityCards(vector<Card>())
 {
     this->isGameOver = false;
     this->isRoundOver = false;
@@ -70,7 +70,7 @@ void Game::printCommunityCards() const{
 void Game::StartingRound(){
     // First player pays the pot minimum bet
     Player& firstPlayer = players[currentPlayerIndex];
-    cout << "Player " << firstPlayer.getName() << ", you need to pay the pot minimum bet of " << minimumBet << "." << endl;
+    cout << "Player " << firstPlayer.getName() << ", you need to pay the pot minimum bet of " << smallBlind << "." << endl;
     firstPlayer.bet(smallBlind);
     pot += smallBlind;
 
@@ -184,19 +184,20 @@ void Game::bettingRound(int minimumBet) {
 
             int choice;
             std::cin >> choice;
-
+            int callAmount;
+            int minimumRaise;
+            int raiseAmount;
             switch (choice) {
                 case 1: // raise
-                    cout << "How much do you want to raise?" << endl;
-                    int raiseAmount;
+                    cout << "How much do you want to raise?" << endl;                   
                     std::cin >> raiseAmount;
 
                     // Validate that the raise amount is at least the minimum raise
-                    int minimumRaise = minimumBet * 2 - currentPlayer.getCurrentBet(); // In poker, the minimum raise is typically double the previous bet or raise
+                    minimumRaise = minimumBet * 2 - currentPlayer.getCurrentBet(); // In poker, the minimum raise is typically double the previous bet or raise
                     if (raiseAmount < minimumRaise) {
                         cout << "Your raise must be at least " << minimumRaise << " chips." << endl;
                         i--; // Prompt the same player again
-                        continue;
+                        break;
                     }
 
                     // Place the raise and update the current bet and minimum bet
@@ -216,7 +217,7 @@ void Game::bettingRound(int minimumBet) {
                     break;
 
                 case 3: // Check/Call
-                    int callAmount = minimumBet - currentPlayer.getCurrentBet();
+                    callAmount = minimumBet - currentPlayer.getCurrentBet();
                     if (callAmount > 0) {
                         cout << "You call " << callAmount << "." << endl;
                         currentPlayer.bet(callAmount);
@@ -230,7 +231,7 @@ void Game::bettingRound(int minimumBet) {
                 default: // Invalid choice
                     cout << "Invalid choice. Please choose 1, 2, or 3." << endl;
                     i--; // Prompt the same player again
-                    continue;
+                    break;
             }
             i++;
         }

@@ -1,4 +1,4 @@
-#include "HandComparator.h"
+#include "../Headers/HandComparator.h"
 
 
 int HandComparator::compareHands(Combination &hand1, Combination &hand2) {

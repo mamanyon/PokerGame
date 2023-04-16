@@ -1,8 +1,8 @@
 #ifndef TIEBREAKER_H
 #define TIEBREAKER_H
 #include <vector>
-#include "Deck.h"
-#include "Combination.h"
+#include "../Headers/Deck.h"
+#include "../Headers/Combination.h"
 using namespace std;
 enum HandRank {
     HIGH_CARD,
@@ -18,6 +18,7 @@ enum HandRank {
 };
 class TieBreaker {
     public:
+        TieBreaker();
         TieBreaker(HandRank rank, vector<Card> fiveCards);
         HandRank rank;
         vector<Card> strongestCards;

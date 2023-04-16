@@ -1,11 +1,9 @@
-#include "TieBreaker.h"
-#include "Combination.h"
-#include "Hand.h"
+#include "../Headers/Hand.h"
 #include <vector>
 #include <iostream>
 #include <algorithm>
 using namespace std;
-
+TieBreaker::TieBreaker():rank(HandRank::HIGH_CARD), strongestCards(vector<Card>()){}
 TieBreaker::TieBreaker(HandRank rank, vector<Card> fiveCards) {
     this->rank=rank;
     strongestCards=determineStrongestCards(fiveCards);

@@ -1,5 +1,5 @@
-#include "Combination.h"
-#include "Hand.h"
+#include "../Headers/Combination.h"
+#include "../Headers/Hand.h"
 #include <algorithm>
 
 Combination::Combination(string name, vector<Card> fiveCards): name(name), fiveCards(fiveCards) {
