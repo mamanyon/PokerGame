@@ -278,6 +278,7 @@ Player* Game::SearchPlayerByName(string name){
             return &player;
         }
     }
+    return nullptr;
 }
 
 
