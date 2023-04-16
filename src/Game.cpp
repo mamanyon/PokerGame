@@ -7,7 +7,7 @@
 
 using namespace std;
 
-Game::Game():num_players(0), currentPlayerIndex(0),deck(), pot(0), players(vector<Player>()), communityCards(vector<Card>())
+Game::Game():num_players(0), currentPlayerIndex(0), pot(0)
 {
     this->isGameOver = false;
     this->isRoundOver = false;
@@ -35,6 +35,7 @@ int Game::getNumPlayers() const{
 
 void Game::run() {
     while(!isGameOver){
+        while(!isRoundOver){
         //the deck is already shuffled when it is initialized.
         StartingRound();
         dealHoleCards();
@@ -51,6 +52,7 @@ void Game::run() {
         bettingPostFlopOrTurnOrRiver();
         if(isRoundOver)break;
         DetermineWinner();//hardest part
+        }
      }
 }
 
@@ -132,7 +134,6 @@ void Game::checkForWinner(){
         //if there is only one player left, he is the winner of the round
         cout << "Player " << activePlayer->getName() << " wins the round!" << endl;
         activePlayer->addChips(pot);
-        pot = 0;
         isRoundOver=true;
         ResetRound();        
     }
@@ -256,21 +257,37 @@ void Game::DetermineWinner() {
     Combination bestHand = allHands[0];
     //the last element in allHands is the worst hand
     Combination worstHand = allHands[allHands.size()-1];
-    //if the best hand is the same as the worst hand, then there is only one winner
-
-
+    //the player with the best hand wins half of the pot
+    cout<<"The player with the best hand is: "<<bestHand.name<<endl;
+    cout<<"The player with the worst hand is: "<<worstHand.name<<endl;
+    if(bestHand.name==worstHand.name){
+        cout<<"Player "<<bestHand.name<<" wins the whole pot"<<endl;
+        SearchPlayerByName(bestHand.name)->addChips(pot);
+    }else{
+        cout<<"Player "<<bestHand.name<<" wins half of the pot"<<endl;
+        cout<<"Player "<<worstHand.name<<" wins half of the pot"<<endl;
+        SearchPlayerByName(bestHand.name)->addChips(pot/2);
+        SearchPlayerByName(worstHand.name)->addChips(pot/2);
+    }
+    isRoundOver=true;
+    ResetRound();
+}
+Player* Game::SearchPlayerByName(string name){
+    for(auto &player:players){
+        if(player.getName()==name){
+            return &player;
+        }
+    }
 }
 
 
 
-//might gonna use 
 
 void Game::ResetRound() {
     // Reset the deck
-    // renew the deck
+    // renew the deck and shuffle it
     deck = Deck();
-    //shuffle the deck
-    deck.shuffle();
+    
 
     // Reset the pot
     pot = 0;
@@ -288,7 +305,7 @@ void Game::ResetRound() {
     
     //increment the dealer=curentPlayerIndex
     currentPlayerIndex = (currentPlayerIndex + 1) % num_players;
-
+    isRoundOver=false;
     // Reset the community cards
     communityCards.clear();
 }

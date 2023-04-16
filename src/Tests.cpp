@@ -1,10 +1,13 @@
-
-#include "../Headers/Combination.h"
-#include "../Headers/Deck.h"
 #include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <random>
+using namespace std;
+#include "../Headers/Player.h"
+#include "../Headers/Game.h"
 #include <cassert>
 
-class Tests{
   void testIsFlush() {
     std::vector<Card> cards = {
         Card(Two,Hearts),
@@ -43,14 +46,41 @@ void testIsFourOfAKind() {
     bool isFourOfAKind = testCombination.IsFourOfAKind();
     assert(isFourOfAKind == true);
 }
+//more tests for the combination class functions 
+void testIsFullHouse() {
+    std::vector<Card> cards = {
+        Card(Two,Hearts),
+        Card(Two,Diamonds),
+        Card(Two,Spades),
+        Card(Six,Clubs),
+        Card(Six,Hearts)
+    };
+    Combination testCombination("Test combination", cards);
+    bool isFullHouse = testCombination.IsFullHouse();
+    assert(isFullHouse == true);
+}
+void testIsRoyalFlush() {
+    std::vector<Card> cards = {
+        Card(Ten,Hearts),
+        Card(Jack,Hearts),
+        Card(Queen,Hearts),
+        Card(King,Hearts),
+        Card(Ace,Hearts)
+    };
+    Combination testCombination("Test combination", cards);
+    bool isRoyalFlush = testCombination.IsRoyalFlush();
+    assert(isRoyalFlush == true);
+}
 
 
 int main() {
     testIsFlush();
     testIsStraightFlush();
     testIsFourOfAKind();
+    testIsFullHouse();
+    testIsRoyalFlush();
     std::cout << "All tests passed!" << std::endl;
     return 0;
 }
-};
+
 
