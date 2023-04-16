@@ -13,7 +13,7 @@ class Combination {
         TieBreaker tieBreaker;
         TieBreaker GetBestHandRank() const;
     private:
-        
+        std::array <int, 13> CountRanks() const;
         bool IsRoyalFlush() const;
         bool IsFlush() const;
         bool IsStraight() const;

@@ -6,7 +6,8 @@
 #include <algorithm>
 using namespace std;
 
-TieBreaker::TieBreaker(HandRank rank, vector<Card> &fiveCards): rank(rank) {
+TieBreaker::TieBreaker(HandRank rank, vector<Card> fiveCards) {
+    this->rank=rank;
     strongestCards=determineStrongestCards(fiveCards);
 }
 
@@ -159,7 +160,7 @@ void TieBreaker::HandleStraightFlush(vector<Card> &fiveCards, vector<Card> &stro
 
 
 int TieBreaker::Compare(TieBreaker &other) {
-    //we compare the strongest cards of each hand
+    //compare the strongest cards of each hand
     for(int i=0; i<strongestCards.size(); i++){
         if(strongestCards[i].getValue()>other.strongestCards[i].getValue()){
             return 1;

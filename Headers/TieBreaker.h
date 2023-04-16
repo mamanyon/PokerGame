@@ -18,7 +18,7 @@ enum HandRank {
 };
 class TieBreaker {
     public:
-        TieBreaker(HandRank rank, vector<Card> &fiveCards);
+        TieBreaker(HandRank rank, vector<Card> fiveCards);
         HandRank rank;
         vector<Card> strongestCards;
         int Compare(TieBreaker &other);
