@@ -1,11 +1,14 @@
 #include "../Headers/Hand.h"
 #include <algorithm>
 #include <iostream>
+#include <set>
 using namespace std;
 Hand::Hand() : player_cards(), community_card() {
     // std::sort(this->cards.begin(), this->cards.end(), [](const Card& c1, const Card& c2) {
     //     return c1.rank > c2.rank;
     // });
+}
+Hand::Hand(const std::vector<Card>& holeCards, const std::vector<Card>& community_cards) : player_cards(holeCards), community_card(community_cards) {
 }
 
 
@@ -25,36 +28,64 @@ vector<Card> Hand::getCommunityCards() const {
 }
 
 
+bool checkDuplicate(vector<Card> &fiveCards, vector<Card> &existingFiveCards) {
+    for (int i = 0; i < 5; i++) {
+        if (fiveCards[i].rank != existingFiveCards[i].rank || fiveCards[i].suit != existingFiveCards[i].suit) {
+            return false;
+        }
+    }
+    return true;
+}
 vector<Combination> Hand::getCombinations(string name) const {
-    //returns a vector of all fiveCards combinations that name can possibly get from his cards-
-    //where 3 cards are from the community cards and 2 cards are from the player cards
     vector<Combination> combinations;
-    //5 choose 3 multiply by 4 choose 2 == 60 .
-    int numPlayerCards = player_cards.size();
-    int numCommunityCards = community_card.size();
+    const int num_player_cards = player_cards.size();
+    const int num_community_cards = community_card.size();
+    cout<<"num_player_cards: "<<num_player_cards<<endl;
+    cout<<"num_community_cards: "<<num_community_cards<<endl;
+    vector<Card> cards(5);
 
-    // Generate all possible combinations of 2 player cards
-    for (int i = 0; i < numPlayerCards - 1; i++) {
-        for (int j = i + 1; j < numPlayerCards; j++) {
-            vector<Card> handCards = {player_cards[i], player_cards[j]};
-
-            // Generate all possible combinations of 3 community cards
-            for (int k = 0; k < numCommunityCards - 2; k++) {
-                for (int l = k + 1; l < numCommunityCards - 1; l++) {
-                    for (int m = l + 1; m < numCommunityCards; m++) {
-                        vector<Card> fiveCards = handCards;
+    for (int i = 0; i < num_player_cards; i++) {
+        for (int j = i + 1; j < num_player_cards; j++) {
+            for (int k = 0; k < num_community_cards; k++) {
+                for (int l = k + 1; l < num_community_cards; l++) {
+                    for (int m = l + 1; m < num_community_cards; m++) {
+                        // Construct the 5-card combination
+                        vector<Card> fiveCards;
+                        fiveCards.push_back(player_cards[i]);
+                        fiveCards.push_back(player_cards[j]);
                         fiveCards.push_back(community_card[k]);
                         fiveCards.push_back(community_card[l]);
                         fiveCards.push_back(community_card[m]);
-                        Combination combination(name, fiveCards);
-                        combinations.push_back(combination);
+                        
+                        // Sort the cards so that we can detect duplicates
+                        sort(fiveCards.begin(), fiveCards.end(), [](const Card& a, const Card& b) {
+                            return a.rank < b.rank || (a.rank == b.rank && a.suit < b.suit);
+                        });
+                        
+                        // Check if the combination is already in the result vector
+                        bool isDuplicate = false;
+                        for (Combination& existingCombination : combinations) {
+                            if(checkDuplicate(fiveCards, existingCombination.fiveCards)) {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                    
+                        // If it's not a duplicate, add it to the result vector
+                        if (!isDuplicate) {
+                            combinations.push_back(Combination(name, fiveCards));                            
+                        }
+                        
                     }
-                }
             }
         }
     }
+    }
+
     return combinations; 
 }
+
+
 void Hand::clearHand() {
     player_cards.clear();
     community_card.clear();

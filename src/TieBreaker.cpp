@@ -157,15 +157,17 @@ void TieBreaker::HandleStraightFlush(vector<Card> &fiveCards, vector<Card> &stro
 }
 
 
-int TieBreaker::Compare(TieBreaker &other) {
+bool TieBreaker::Compare(TieBreaker &other) {
+
+
     //compare the strongest cards of each hand
     for(int i=0; i<strongestCards.size(); i++){
         if(strongestCards[i].getValue()>other.strongestCards[i].getValue()){
-            return 1;
+            return true;
         }
         else if(strongestCards[i].getValue()<other.strongestCards[i].getValue()){
-            return -1;
+            return false;
         }
     }
-    return 0;
+    return false;
 }

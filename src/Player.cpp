@@ -64,3 +64,6 @@ void Player::Deactivate(){
 void Player::Activate(){
     isactive = true;
 }
+void Player::SetCurrentBet(int amount){
+    currentBet = amount;
+}

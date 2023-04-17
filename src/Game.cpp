@@ -2,6 +2,8 @@
 //It should be able to manage the gameplay, including the different betting rounds, dealing of cards, and determining the winner(s) of each hand. 
 //It should also keep track of the players, their current hands, and their current bets.
 #include <iostream>
+#include <chrono>   // for std::chrono::seconds and std::this_thread::sleep_for
+#include <thread>   // for std::this_thread::sleep_for
 #include <string>
 #include "..\Headers\Game.h" 
 
@@ -32,26 +34,46 @@ Game::Game():num_players(0), currentPlayerIndex(0), pot(0)
 int Game::getNumPlayers() const{
     return num_players;
 }
-
+void Game::CheckWhoIsOut(){
+    //if there are players with 0 chips, they are out of the game
+    //erase them from the players vector
+    //and update the number of players
+    for(int i=0;i<players.size();i++){
+        if(players[i].getChips()==0){
+            cout<<""<<endl;cout<<""<<endl;cout<<""<<endl;
+            //The player is out of the game
+            cout<<players[i].getName()<<" is out of the game."<<endl;
+            cout<<"thanks for playing!"<<endl;
+            cout<<""<<endl;cout<<""<<endl;cout<<""<<endl;
+            players[i].fold();
+            players.erase(players.begin()+i);
+        }
+    }
+    num_players=players.size();
+}
 void Game::run() {
     while(!isGameOver){
         while(!isRoundOver){
-        //the deck is already shuffled when it is initialized.
-        StartingRound();
-        dealHoleCards();
-        //is good
-        bettingPreFlop();//is good
-        if(isRoundOver)break;;
-        dealFlop();//is good
-        bettingPostFlopOrTurnOrRiver();
-        if(isRoundOver)break;
-        dealTurnOrRiver();
-        bettingPostFlopOrTurnOrRiver();
-        if(isRoundOver)break;
-        dealTurnOrRiver();
-        bettingPostFlopOrTurnOrRiver();
-        if(isRoundOver)break;
-        DetermineWinner();//hardest part
+            CheckWhoIsOut();
+            StartingRound();
+            dealHoleCards();
+            //is good
+            bettingPreFlop();//is good
+            cout<<"___________________________________"<<endl;
+            if(isRoundOver)break;;
+            dealFlop();//is good
+            bettingPostFlopOrTurnOrRiver();
+            cout<<"___________________________________"<<endl;
+            if(isRoundOver)break;
+            dealTurnOrRiver();
+            bettingPostFlopOrTurnOrRiver();
+            cout<<"___________________________________"<<endl;
+            if(isRoundOver)break;
+            dealTurnOrRiver();
+            bettingPostFlopOrTurnOrRiver();
+            cout<<"___________________________________"<<endl;
+            if(isRoundOver)break;
+            DetermineWinner();
         }
      }
 }
@@ -72,6 +94,8 @@ void Game::printCommunityCards() const{
 void Game::StartingRound(){
     // First player pays the pot minimum bet
     Player& firstPlayer = players[currentPlayerIndex];
+    //if the player doesnt have chips- he is out of the game
+
     cout << "Player " << firstPlayer.getName() << ", you need to pay the pot minimum bet of " << smallBlind << "." << endl;
     firstPlayer.bet(smallBlind);
     pot += smallBlind;
@@ -117,7 +141,12 @@ void Game::dealTurnOrRiver() {
     //throw away the first card
     deck.dealCard();
     //deal 1 card to the community cards
-    communityCards.push_back(deck.dealCard());
+    Card c=deck.dealCard();
+    communityCards.push_back(c);
+    //for each player 
+    for (Player& player : players) {  
+            player.receiveCommunityCard(c);
+    }
 }
 
 void Game::checkForWinner(){
@@ -133,6 +162,7 @@ void Game::checkForWinner(){
     if(numActivePlayers==1){
         //if there is only one player left, he is the winner of the round
         cout << "Player " << activePlayer->getName() << " wins the round!" << endl;
+        cout << "You won" << pot << " chips!" << endl;
         activePlayer->addChips(pot);
         isRoundOver=true;
         ResetRound();        
@@ -143,6 +173,11 @@ void Game::checkForWinner(){
 void Game::bettingPreFlop(){
     int minimumBet = bigBlind; // the minimum bet is equal to the big blind
     bettingRound(minimumBet);
+    //current bet set to 0 for the next round for each player
+    for (Player& player : players) {
+        player.SetCurrentBet(0);
+    }
+    
 }
 
 void Game::bettingPostFlopOrTurnOrRiver(){
@@ -153,6 +188,9 @@ void Game::bettingPostFlopOrTurnOrRiver(){
 
 void Game::bettingRound(int minimumBet) {
     int playerIndex = currentPlayerIndex; // starting player for the round
+    if(minimumBet==10){//if it is the first round, the starting player is the player that after the big blind
+        playerIndex = (currentPlayerIndex + 2) % num_players;
+    }//otherwise, the starting player is the player that before the small blind
     int playersToAct = 0; // number of active players who have not yet checked or folded
     for (Player& player : players) {//count the number of active players
         if (player.isActive()) {
@@ -167,17 +205,17 @@ void Game::bettingRound(int minimumBet) {
                 roundFinished=true;
                 break;
             }
-            Player& currentPlayer = players[(playerIndex + i+2) % num_players];
+            Player& currentPlayer = players[(playerIndex + i) % num_players];
 
             // Skip the player if they've already folded
             if (!currentPlayer.isActive()) {
                 continue;
             }
+            cout<<" "<<endl;
             // Prompt the player to make a decision
             cout << "Player " << currentPlayer.getName() << ", it's your turn to act." << endl;
             cout << "Your hand: "<<endl;
             currentPlayer.printHoleCards();
-            cout << "The community cards are: " << endl;
             printCommunityCards();
             cout << "The minimum bet is " << minimumBet << ". You have " << currentPlayer.getChips() << " chips." << endl;
             cout <<"Your current bet in this round is "<<currentPlayer.getCurrentBet()<<endl;
@@ -190,22 +228,44 @@ void Game::bettingRound(int minimumBet) {
             int raiseAmount;
             switch (choice) {
                 case 1: // raise
+                //if the player doesnt have chips to raise, he can only call
+                    if(currentPlayer.getChips()<minimumBet){
+                        cout<<" "<<endl;
+                        cout<<"You dont have enough chips to raise. You can only call."<<endl;
+                        cout<<" "<<endl;
+                        callAmount = minimumBet - currentPlayer.getCurrentBet();
+                        currentPlayer.bet(callAmount);
+                        pot += callAmount;
+                        playersToAct--;
+                        break;
+                    }
                     cout << "How much do you want to raise?" << endl;                   
                     std::cin >> raiseAmount;
+                    cout<<" "<<endl;
 
                     // Validate that the raise amount is at least the minimum raise
                     minimumRaise = minimumBet * 2 - currentPlayer.getCurrentBet(); // In poker, the minimum raise is typically double the previous bet or raise
                     if (raiseAmount < minimumRaise) {
+                        cout<<" "<<endl;
                         cout << "Your raise must be at least " << minimumRaise << " chips." << endl;
+                        cout<<" "<<endl;
+
                         i--; // Prompt the same player again
                         break;
                     }
 
                     // Place the raise and update the current bet and minimum bet
+                    minimumBet = raiseAmount+ currentPlayer.getCurrentBet();
                     currentPlayer.bet(raiseAmount);
-                    minimumBet = raiseAmount;
                     pot += raiseAmount;
                     playersToAct--; // The player who raised does not need to act again for now..
+                    //but the other players that are still active need to act again
+                    for(Player& player:players){
+                        if(player.isActive()){
+                            playersToAct++;
+                        }
+                    }
+                    playersToAct--; //..except for the player who raised
                     break;
 
                 case 2: // Fold
@@ -221,10 +281,12 @@ void Game::bettingRound(int minimumBet) {
                     callAmount = minimumBet - currentPlayer.getCurrentBet();
                     if (callAmount > 0) {
                         cout << "You call " << callAmount << "." << endl;
+                        cout<<""<<endl;
                         currentPlayer.bet(callAmount);
                         pot += callAmount;
                     } else {
                         cout << "You check." << endl;
+                        cout<<""<<endl;
                     }
                     playersToAct--;
                     break;
@@ -244,6 +306,8 @@ void Game::DetermineWinner() {
     //Determine the best hand for each player that is still active
     //also determine the worst hand for each player that is still active
     vector<Combination> allHands ;
+    cout<<"Determining the winner..."<<endl;
+    std::this_thread::sleep_for(std::chrono::seconds(4));
     for(auto &player:players){
         if(player.isActive()){
             vector<Combination> playersHands = player.getCombinations();
@@ -251,24 +315,40 @@ void Game::DetermineWinner() {
             allHands.insert(allHands.end(), playersHands.begin(), playersHands.end());
         }
     }
+    //print size all hands for testing
+    cout<<"Size of all hands: "<<allHands.size()<<endl;
     //sort allHands with compareHands
     sort(allHands.begin(), allHands.end(), HandComparator::compareHands);
+    cout<<"__________________________________________________________" <<endl;
+    cout<<"__________________________________________________________" <<endl;
+    cout<<"__________________________________________________________" <<endl;
+    cout<<"__________________________________________________________" <<endl;
     //the first element in allHands is the best hand
     Combination bestHand = allHands[0];
     //the last element in allHands is the worst hand
     Combination worstHand = allHands[allHands.size()-1];
     //the player with the best hand wins half of the pot
     cout<<"The player with the best hand is: "<<bestHand.name<<endl;
+    cout<<"with the hand: "<<endl; 
+    bestHand.PrintHand();
     cout<<"The player with the worst hand is: "<<worstHand.name<<endl;
+    cout<<"with the hand: "<<endl;
+    worstHand.PrintHand();
     if(bestHand.name==worstHand.name){
-        cout<<"Player "<<bestHand.name<<" wins the whole pot"<<endl;
+        cout<<"Player "<<bestHand.name<<" wins the whole pot, " << pot <<"chips !!!" <<endl;
         SearchPlayerByName(bestHand.name)->addChips(pot);
     }else{
-        cout<<"Player "<<bestHand.name<<" wins half of the pot"<<endl;
-        cout<<"Player "<<worstHand.name<<" wins half of the pot"<<endl;
+        cout<<"Player "<<bestHand.name<<" wins half of the pot, " << (pot/2) << "chips !" <<endl;
+        cout<<"Player "<<worstHand.name<<" wins half of the pot, "<< (pot/2) << "chips !" <<endl;
         SearchPlayerByName(bestHand.name)->addChips(pot/2);
         SearchPlayerByName(worstHand.name)->addChips(pot/2);
     }
+    cout<<"The Round is over!"<<endl;
+    cout<<"___________________________________"<<endl;
+    cout<<"___________________________________"<<endl;
+    cout<<"___________________________________"<<endl;
+    cout<<"Starting a new round..."<<endl;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
     isRoundOver=true;
     ResetRound();
 }
@@ -297,6 +377,7 @@ void Game::ResetRound() {
     for (int i = 0; i < num_players; i++) {
         Player& player = players[i];
         player.getHand().clearHand();
+        player.ResetCurrentBet();
         player.Activate();
         if(player.getChips()<=0){//check if any player is out of chips
             player.Deactivate();
@@ -309,6 +390,9 @@ void Game::ResetRound() {
     isRoundOver=false;
     // Reset the community cards
     communityCards.clear();
+    cout<<""<<endl;
+    cout<<".........................................."<<endl;
+    cout<<"New Round Started!"<<endl;
 }
 
 bool Game::EndGame() {

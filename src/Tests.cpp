@@ -6,6 +6,8 @@
 using namespace std;
 #include "../Headers/Player.h"
 #include "../Headers/Game.h"
+#include "../Headers/HandComparator.h"
+#include "../Headers/TieBreaker.h"
 #include <cassert>
 
   void testIsFlush() {
@@ -72,7 +74,63 @@ void testIsRoyalFlush() {
     assert(isRoyalFlush == true);
 }
 
+void testGetCombinations(){
+    std::vector<Card> player_cards = {
+        Card(Two,Hearts),
+        Card(Two,Diamonds),
+        Card(Two,Spades),
+        Card(Six,Clubs)
+    };
+    vector<Card> community_cards = {
+        Card(Ten,Hearts),
+        Card(Six,Spades),
+        Card(Queen,Hearts),
+        Card(Seven,Hearts),
+        Card(Ace,Hearts)
+    };
+    Hand hand(player_cards, community_cards);
+    vector<Combination> combinations = hand.getCombinations("sa");
+    //print combinations
+    for (int i = 0; i < combinations.size(); i++){
+        combinations[i].PrintHand();
+        cout << ""<<endl;
+    }
+    cout << "Number of combinations: " << combinations.size() << endl;
+}
+//test compareHands function in HandComparator class
+void testCompareHands(){
+    std::vector<Card> player_cards = {
+        Card(Two,Hearts),
+        Card(Two,Diamonds),
+        Card(Three,Spades),
+        Card(Six,Clubs)
+    };
+    vector<Card> community_cards = {
+        Card(Ten,Hearts),
+        Card(Six,Spades),
+        Card(Queen,Hearts),
+        Card(Seven,Hearts),
+        Card(Ace,Hearts)
+    };
+    Hand hand(player_cards, community_cards);
+    HandComparator handComparator;
+    vector<Combination> combinations = hand.getCombinations("sa");
+    //print combinations
+    for (int i = 0; i < combinations.size()-1; i++){
+        int num = handComparator.compareHands(combinations[i], combinations[i+1]);
+        cout << "the number is : " << num <<endl;
+        //check tiebreaker compare function
+        TieBreaker tieBreaker1 = combinations[i].tieBreaker;
+        TieBreaker tieBreaker2 = combinations[i+1].tieBreaker;
+        int num2 = tieBreaker1.Compare(tieBreaker2);
+        cout << "the number of compare tie breaker is : " << num2 <<endl;
+    }
+    
 
+
+    cout << "Number of combinations: " << combinations.size() << endl;
+    sort(combinations.begin(), combinations.end(), HandComparator::compareHands);
+}
 int main() {
     testIsFlush();
     testIsStraightFlush();
@@ -80,6 +138,7 @@ int main() {
     testIsFullHouse();
     testIsRoyalFlush();
     std::cout << "All tests passed!" << std::endl;
+    testCompareHands();
     return 0;
 }
 

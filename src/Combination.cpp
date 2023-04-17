@@ -1,6 +1,8 @@
 #include "../Headers/Combination.h"
 #include "../Headers/Hand.h"
 #include <algorithm>
+#include <iostream>
+
 
 Combination::Combination(string name, vector<Card> fiveCards): name(name), fiveCards(fiveCards) {
     tieBreaker = GetBestHandRank();
@@ -112,6 +114,7 @@ bool Combination::IsRoyalFlush() const {
     //check if there is a royal flush
     return (IsStraightFlush() && fiveCards[0].rank == 10);
 }
+
 TieBreaker Combination::GetBestHandRank() const {
     //return an object of tiebreaker according to the rank of the hand
     if (IsRoyalFlush()) {
@@ -145,6 +148,12 @@ TieBreaker Combination::GetBestHandRank() const {
     else {
         return TieBreaker(HIGH_CARD, fiveCards);
     }
-    
-    
+}
+
+void Combination::PrintHand() const {
+    //print the five cards of the hand
+    for (int i = 0; i < fiveCards.size(); i++) {
+        std::cout << fiveCards[i].toString() << "  ";
+    }
+    std::cout << std::endl;
 }
