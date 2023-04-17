@@ -31,6 +31,19 @@ Game::Game():num_players(0), currentPlayerIndex(0), pot(0)
     }
     
 }
+
+//constructor for testing purposes
+Game::Game(int numPlayers, int startingMoney):num_players(numPlayers), currentPlayerIndex(0), pot(0)
+{
+    this->isGameOver = false;
+    this->isRoundOver = false;
+    for (int i = 0; i < numPlayers; i++) {
+        string name = "Player " + to_string(i + 1);
+        Player p(name, startingMoney);
+        players.push_back(p);
+    }
+}
+
 int Game::getNumPlayers() const{
     return num_players;
 }
@@ -185,7 +198,18 @@ void Game::bettingPostFlopOrTurnOrRiver(){
     bettingRound(minimumBet);
 }
 
-
+int Game::GetCurrentPlayerIndex() const{
+    return currentPlayerIndex;
+}
+void Game::SetCurrentPlayerIndex(int index){
+    currentPlayerIndex=index;
+}
+vector<Player> Game::GetPlayers() const{
+    return players;
+}
+int Game::GetPot() const{
+    return pot;
+}
 void Game::bettingRound(int minimumBet) {
     int playerIndex = currentPlayerIndex; // starting player for the round
     if(minimumBet==10){//if it is the first round, the starting player is the player that after the big blind
@@ -335,11 +359,11 @@ void Game::DetermineWinner() {
     cout<<"with the hand: "<<endl;
     worstHand.PrintHand();
     if(bestHand.name==worstHand.name){
-        cout<<"Player "<<bestHand.name<<" wins the whole pot, " << pot <<"chips !!!" <<endl;
+        cout<<"Player "<<bestHand.name<<" wins the whole pot, " << pot <<" chips !!!" <<endl;
         SearchPlayerByName(bestHand.name)->addChips(pot);
     }else{
-        cout<<"Player "<<bestHand.name<<" wins half of the pot, " << (pot/2) << "chips !" <<endl;
-        cout<<"Player "<<worstHand.name<<" wins half of the pot, "<< (pot/2) << "chips !" <<endl;
+        cout<<"Player "<<bestHand.name<<" wins half of the pot, " << (pot/2) << " chips !" <<endl;
+        cout<<"Player "<<worstHand.name<<" wins half of the pot, "<< (pot/2) << " chips !" <<endl;
         SearchPlayerByName(bestHand.name)->addChips(pot/2);
         SearchPlayerByName(worstHand.name)->addChips(pot/2);
     }
@@ -380,7 +404,7 @@ void Game::ResetRound() {
         player.ResetCurrentBet();
         player.Activate();
         if(player.getChips()<=0){//check if any player is out of chips
-            player.Deactivate();
+            player.fold();
         }
     }
     isGameOver=EndGame();

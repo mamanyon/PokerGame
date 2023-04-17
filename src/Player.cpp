@@ -58,12 +58,12 @@ void Player::fold() {
 vector<Combination> Player::getCombinations() const{
     return hand.getCombinations(this->name);
 }
-void Player::Deactivate(){
-    isactive = false;
-}
 void Player::Activate(){
     isactive = true;
 }
 void Player::SetCurrentBet(int amount){
     currentBet = amount;
+}
+void Player::SetChips(int amount){
+    chips = amount;
 }

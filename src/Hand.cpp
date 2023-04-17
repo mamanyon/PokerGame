@@ -40,8 +40,6 @@ vector<Combination> Hand::getCombinations(string name) const {
     vector<Combination> combinations;
     const int num_player_cards = player_cards.size();
     const int num_community_cards = community_card.size();
-    cout<<"num_player_cards: "<<num_player_cards<<endl;
-    cout<<"num_community_cards: "<<num_community_cards<<endl;
     vector<Card> cards(5);
 
     for (int i = 0; i < num_player_cards; i++) {

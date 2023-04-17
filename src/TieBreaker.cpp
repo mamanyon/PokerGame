@@ -77,15 +77,22 @@ void TieBreaker::HandleHighCard(vector<Card> &fiveCards, vector<Card> &strongest
 }
 void TieBreaker::HandleTwoPair(vector<Card> &fiveCards, vector<Card> &strongestCards) {
     //push the two pairs to the strongest cards and delete the pairs from the five cards
-    for(int i=0; i<fiveCards.size(); i++){
-        for(int j=i+1; j<fiveCards.size(); j++){
+    for(int i=fiveCards.size()-1; i>=0; i--){
+        for(int j=i-1; j>=0; j--){
             if(fiveCards[i].getValue()==fiveCards[j].getValue()){
                 strongestCards.push_back(fiveCards[i]);
-                fiveCards.erase(fiveCards.begin()+j);
                 fiveCards.erase(fiveCards.begin()+i);
+                fiveCards.erase(fiveCards.begin()+j);
             }
         }
-    }
+    }//iterates over the vector in reverse order, starting from the end and going backwards to the beginning.
+    //This ensures that erasing elements from the vector doesn't affect the position of the remaining elements that still need to be checked.
+    
+    
+    //sort strongest cards in descending order
+    sort(strongestCards.begin(), strongestCards.end(), [](const Card& c1, const Card& c2) {
+        return c1.getValue() > c2.getValue();
+    });
     //push the last card to the strongest cards
     strongestCards.push_back(fiveCards[0]);
 }
